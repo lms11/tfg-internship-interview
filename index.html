@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+
+    <title>Uber x Taxistas</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+    <style type="text/css">
+    body, html {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding:0;
+        font-family: 'Helvetica', 'Helvetica-Neue', Arial;
+    }
+
+    .modal {
+        display: none;
+        position: absolute;
+        width: 50%;
+        height: 50%;
+        top: 25%;
+        left: 25%;
+        background-color: white;
+    }
+    #canvas {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        background-color: red;
+        float: left;
+    }
+
+    #status {
+        width: 300px;
+        height: auto;
+        left: 10px;
+        top: 10px;
+        position: absolute;
+        background-color: white;
+    }
+
+    h1 {
+        margin: 5px 5px 0 5px;
+        padding: 0;
+        color: #202020;
+        text-align: center;
+    }
+
+    h2 {
+        font-size: 14px;
+        margin: 0 5px 5px 5px;
+        padding: 0;
+        color: #484848;
+        text-align: center;
+    }
+
+    p {
+        margin: 10px 5px 10px 5px;
+    }
+
+    #lucas {
+        font-size: 12px;
+    }
+
+    #bem-vindo {
+        display: block;
+    }
+    </style>
+</head>
+<body>
+
+<div class="modal" id="bem-vindo">
+    <h1>Bem-vindo!</h1>
+    <p>Meu nome é Lucas Moreira, tenho 18 anos e estudo Ciência da Computação na Universidade de São Paulo.</p>
+    <p>Você está prestes a começar a jogar mas antes gostaria de avisá-lo que o jogo desenvolvido <strong>se trata apenas de uma brincadeira</strong> envolvendo o Uber e os taxistas.</p>
+    <p>O objetivo é muito simples: desvie dos taxistas e não atropele os ciclistas. Se bater em um taxi, o jogo acaba. Se bater em um ciclista, a pontuação cai pela metade.</p>
+    <p>Ah, pode ser que apareçam algumas garrafas de Ciroq na pista. Ao bebe-las, o jogo fica mais lento (e portanto mais fácil).</p>
+    <p>Se beber, não dirija.</p>
+    <p><a href="#" id="start">Ok, entendi. Agora deixa eu jogar!</a></p>
+</div>
+
+<div class="modal" id="gameover">
+    <h1>O jogo acabou!</h1>
+    <p>
+        <strong>Tempo transcorrido: </strong> <span id="tempo2"></span><br />
+        <strong>Taxistas <span class="joke">ultrapassados</span>: </strong> <span id="obstaculos2"></span><br />
+        <strong>Velocidade atual: </strong> <span id="velocidade2"></span><br />
+        <strong>Sua pontuação: </strong> <span id="pontuacao2"></span><br />
+    </p>
+    <hr />
+    <p>
+        <strong>Seu recorde atual</strong><br />
+        <strong>Maior tempo: </strong> <span id="r-tempo2"></span><br />
+        <strong>Maior # de taxistas: </strong> <span id="r-taxi2"></span><br />
+        <strong>Maior pontuação: </strong> <span id="r-score2"></span><br />
+    </p>
+    <hr />
+    <p>
+        <a href="#" id="restart">Recomeçar!</a>
+    </p>
+</div>
+
+<div id="status">
+    <h1>Uber x Taxistas</h1>
+    <h2>na maravilhoso Rio de Janeiro</h2>
+    <p>
+        <strong>Tempo transcorrido: </strong> <span id="tempo"></span><br />
+        <strong>Taxistas <span class="joke">ultrapassados</span>: </strong> <span id="obstaculos"></span><br />
+        <strong>Velocidade atual: </strong> <span id="velocidade"></span><br />
+        <strong>Sua pontuação: </strong> <span id="pontuacao"></span><br />
+    </p>
+    <hr />
+    <p>
+        <strong>Seu recorde atual</strong><br />
+        <strong>Maior tempo: </strong> <span id="r-tempo"></span><br />
+        <strong>Maior # de taxistas ultrapassados: </strong> <span id="r-taxi"></span><br />
+        <strong>Maior pontuação: </strong> <span id="r-score"></span><br />
+    </p>
+    <hr />
+    <p id="lucas">Desenvolvido por Lucas Santos</p>
+</div>
+
+<canvas id="canvas">Your browser does not support the HTML5 canvas tag.</canvas>
+
+<script src="geometry.js"></script>
+<script src="controller.js"></script>
+<script src="object.js"></script>
+<script src="game.js"></script>
+
+<script>
+    // Mapeia os elementos HTML
+    var statusTime = document.getElementById("tempo"), statusTime2 = document.getElementById("tempo2");
+    var statusObstacles = document.getElementById("obstaculos"), statusObstacles2 = document.getElementById("obstaculos2");
+    var statusVelocity = document.getElementById("velocidade"), statusVelocity2 = document.getElementById("velocidade2");
+    var statusScore = document.getElementById("pontuacao"), statusScore2 = document.getElementById("pontuacao2");
+
+    var recordeTempo = document.getElementById("r-tempo"), recordeTempo2 = document.getElementById("r-tempo2");
+    var recordeTaxi = document.getElementById("r-taxi"), recordeTaxi2 = document.getElementById("r-taxi2");
+    var recordeScore = document.getElementById("r-score"), recordeScore2 = document.getElementById("r-score2");
+
+    var playing = false;
+
+    document.getElementById("start").addEventListener("click", function() {
+        document.getElementById("bem-vindo").style.display = 'none';
+        playing = true;
+
+        // Seta o tempo inicial do jogo
+        Game.startTime = new Date(); // poderia usar "performance.now()" mas não estou certo quanto as restrições
+        Game.scoreTime = new Date();
+    });
+
+    document.getElementById("restart").addEventListener("click", function() {
+        Game.initialize();
+
+        document.getElementById("gameover").style.display = 'none';
+        playing = true;
+
+        // Seta o tempo inicial do jogo
+        Game.startTime = new Date(); // poderia usar "performance.now()" mas não estou certo quanto as restrições
+        Game.scoreTime = new Date();
+    });
+
+    function updateRecorde() {
+        if (localStorage.maxTime != undefined && localStorage.maxTime != null &&
+            localStorage.maxObstacles != undefined && localStorage.maxObstacles != null &&
+            localStorage.maxScore != undefined && localStorage.maxScore != null) {
+
+            var segs = localStorage.maxTime;
+            recordeTempo.textContent = recordeTempo2.textContent = Math.floor(segs/60) + 'min e ' + Math.floor(segs % 60) + 's';
+            recordeTaxi.textContent  = recordeTaxi2.textContent  = localStorage.maxObstacles;
+            recordeScore.textContent = recordeScore2.textContent = localStorage.maxScore;
+
+        } else {
+            recordeTempo.textContent = recordeTempo2.textContent = '-';
+            recordeTaxi.textContent  = recordeTaxi2.textContent  = '-';
+            recordeScore.textContent = recordeScore2.textContent = '-';
+
+        }
+    }
+
+    Game.initialize();
+    updateRecorde();
+
+    Game.run = (function() {
+        var loops = 0, skipTicks = 1000 / Game.fps,
+        maxFrameSkip = 10,
+        nextGameTick = (new Date).getTime();
+
+        return function() {
+            loops = 0;
+
+            while ((new Date).getTime() > nextGameTick) {
+                Game.update();
+                nextGameTick += skipTicks;
+                loops++;
+            }
+
+            Game.draw();
+        };
+    })();
+
+    (function() {
+        var onEachFrame;
+        if (window.webkitRequestAnimationFrame) {
+            onEachFrame = function(cb) {
+                var _cb = function() { cb(); webkitRequestAnimationFrame(_cb); }
+                _cb();
+            };
+        }
+        else if (window.mozRequestAnimationFrame) {
+            onEachFrame = function(cb) {
+                var _cb = function() { cb(); mozRequestAnimationFrame(_cb); }
+                _cb();
+            };
+        }
+        else {
+            onEachFrame = function(cb) {
+                setInterval(cb, 1000 / 60);
+            }
+        }
+
+        window.onEachFrame = onEachFrame;
+    })();
+
+    window.onEachFrame(Game.run);
+  </script>
+
+</body>
+</html>
